@@ -1,13 +1,16 @@
 var createError = require('http-errors')
 var express = require('express')
+var cors = require('cors')
 var path = require('path')
 var cookieParser = require('cookie-parser')
 var logger = require('morgan')
+var app = express();
+app.use(cors())
 
 var indexRouter = require('./routes/index')
 var usersRouter = require('./routes/users')
 var diagram = require('./routes/diagram.route')
-var app = express();
+
 
 const dotenv = require('dotenv')
 dotenv.config();
@@ -23,6 +26,7 @@ db.once('open', function() {
 // view engine setup
 app.set('views', path.join(__dirname, 'views'))
 app.set('view engine', 'pug')
+
 
 app.use(logger('dev'))
 app.use(express.json())

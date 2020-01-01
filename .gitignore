@@ -1,0 +1,5 @@
+#Env and config variables
+.env
+
+# Dependency directories
+node_modules/

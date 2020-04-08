@@ -10,7 +10,8 @@ app.use(cors())
 var indexRouter = require('./routes/index')
 var usersRouter = require('./routes/users')
 var diagram = require('./routes/diagram.route')
-
+var representation = require('./routes/representation.route')
+var diagnostic = require('./routes/diagnostic.route')
 
 const dotenv = require('dotenv')
 dotenv.config();
@@ -37,7 +38,8 @@ app.use(express.static(path.join(__dirname, 'public')))
 app.use('/', indexRouter)
 app.use('/users', usersRouter)
 app.use('/diagram', diagram)
-
+app.use('/representation', representation)
+app.use('/diagnostic', diagnostic)
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   next(createError(404))

@@ -1,7 +1,7 @@
 const Diagram = require('../models/diagram.model')
 
 exports.test = function (req, res) {
-    res.send('Greetings from the Test controller!')
+    res.send('Diagram Schema: Greetings from the Test controller!')
 };
 
 exports.diagram_create = function (req,res){
@@ -17,7 +17,7 @@ exports.diagram_create = function (req,res){
             console.log("Error while saving, " + err)
             res.send("Error while saving, " + err)
         }
-        res.send('Product created successfully')
+        res.send('Diagram created successfully')
     })
 };
 

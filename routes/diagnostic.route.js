@@ -1,0 +1,16 @@
+const express = require('express')
+const router = express.Router()
+
+const diagnostic_controller = require('../controllers/diagnostic.controller')
+router.get('/test', diagnostic_controller.test)
+router.post('/setName', diagnostic_controller.setDiagnosticName)
+router.post('/setVariable', diagnostic_controller.setDiagnosticVariable)
+router.post('/deleteVariable', diagnostic_controller.deleteDiagnosticVariable)
+router.post('/setRuleVariable', diagnostic_controller.setRuleVariable)
+router.post('/setRuleOperator', diagnostic_controller.setRuleOperator)
+router.post('/setRuleParameter', diagnostic_controller.setRuleParameter)
+router.post('/getRuleVariableForNode', diagnostic_controller.getRuleVariableForNode)
+router.post('/getRuleParameterForNode', diagnostic_controller.getRuleParameterForNode)
+router.post('/getRuleOperatorForNode', diagnostic_controller.getRuleOperatorForNode)
+router.post('/setDiagram', diagnostic_controller.setDiagram)
+module.exports = router

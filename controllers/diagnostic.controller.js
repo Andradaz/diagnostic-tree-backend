@@ -8,7 +8,6 @@ exports.setDiagnosticName = function (req, res) {
     //primeste ceva de forma:
     // name: " ",
     // idgen: " "
-    console.log(req.body.nume)
     let query = { 'idgen': req.body.idgen }
     let newName = req.body.name
 
@@ -140,11 +139,8 @@ exports.setRuleVariable = function (req, res) {
                     }
                     i++
                 }
-                console.log("Exista un nod cu acelasi id? " + exist)
                 if (exist) {
-                    console.log(listRules[index].variable)
                     listRules[index].variable = newVariable
-                    console.log(listRules[index].variable)
                 } else {
                     listRules.push({
                         "idnode": req.body.idnode,
@@ -218,12 +214,9 @@ exports.setRuleOperator = function (req, res) {
                     }
                     i++
                 }
-                console.log("Exista un nod cu acelasi id? " + exist)
                 //Daca exista un nod cu acelasi id il editam
                 if (exist) {
-                    console.log(listRules[index].operator)
                     listRules[index].operator = newOperator
-                    console.log(listRules[index].operator)
                 } else {
                     //Daca nu exista un nod cu acelasi id, il adaugam la finalul listei
                     listRules.push({
@@ -297,12 +290,9 @@ exports.setRuleParameter = function (req, res) {
                     }
                     i++
                 }
-                console.log("Exista un nod cu acelasi id? " + exist)
                 //Daca exista un nod cu acelasi id il editam
                 if (exist) {
-                    console.log(listRules[index].parameter)
                     listRules[index].parameter = newParameter
-                    console.log(listRules[index].parameter)
                 } else {
                     //Daca nu exista un nod cu acelasi id, il adaugam la finalul listei
                     listRules.push({
@@ -394,9 +384,7 @@ exports.getRuleParameterForNode = function (req, res) {
             }
             if(data !== undefined){
                 res.send(data)
-                console.log("ramura 1")
             }else{
-                console.log("ramura 2")
                 res.send(data)
             }
             
@@ -453,8 +441,6 @@ exports.setDiagram = function (req, res) {
     let query = { 'idgen': req.body.idgen }
     let newDiagram = req.body.diagram
     newDiagram = JSON.parse(newDiagram)
-    console.log("AICI ESTE NEW DIAGRAMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM" + newDiagram)
-    console.log("AICI ESTE NEW DIAGRAMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM" + JSON.stringify(newDiagram))
     Diagnostic.findOneAndUpdate(query, { diagram: newDiagram }, { upsert: true }, function (err) {
         if (err) {
             console.log(err)

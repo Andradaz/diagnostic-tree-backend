@@ -1,14 +1,11 @@
 const Diagram = require('../models/diagram.model')
 
-exports.test = function (req, res) {
-    res.send('Diagram Schema: Greetings from the Test controller!')
-};
-
-exports.diagram_create = function (req,res){
+exports.diagramCreate = function (req,res){
     let diagram = new Diagram (
         {
             name: req.body.name,
-            link: req.body.link
+            link: req.body.link,
+            published: req.body.published
         }
     )
 
@@ -21,16 +18,6 @@ exports.diagram_create = function (req,res){
     })
 };
 
-exports.diagram_details = function (req, res){
-    Diagram.findById(req.params.id, function(err, diagram){
-        if (err){
-            console.log("Error while extracting data. " + err)
-            res.send("Error while extracting data. " + err)
-        }
-        res.send(diagram)
-    })
-};
-
 exports.list = function (req, res){
     Diagram.find(function(err, diagrams){
         if (err) {
@@ -40,3 +27,15 @@ exports.list = function (req, res){
         res.send(diagrams)
     })
 }
+
+exports.setStatus = function (req,res){
+    //primeste name si published(true/false)
+    let query = { 'name': req.body.name }
+    let status = req.body.published
+
+    Diagram.findOneAndUpdate(query, { published: status }, { upsert: true }, function (err) {
+        if (err) return res.send(500, { error: err })
+        return res.send('Succesfully set diagram published status.')
+    });
+}
+

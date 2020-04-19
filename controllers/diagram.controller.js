@@ -5,7 +5,8 @@ exports.diagramCreate = function (req,res){
         {
             name: req.body.name,
             link: req.body.link,
-            published: req.body.published
+            published: req.body.published,
+            description: req.body.description
         }
     )
 
@@ -29,9 +30,9 @@ exports.list = function (req, res){
 }
 
 exports.setStatus = function (req,res){
-    //primeste name si published(true/false)
+    //primeste name si status(true/false)
     let query = { 'name': req.body.name }
-    let status = req.body.published
+    let status = req.body.status
 
     Diagram.findOneAndUpdate(query, { published: status }, { upsert: true }, function (err) {
         if (err) return res.send(500, { error: err })

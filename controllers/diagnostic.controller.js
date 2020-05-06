@@ -441,7 +441,7 @@ exports.setDiagram = function (req, res) {
     let query = { 'idgen': req.body.idgen }
     let newDiagram = req.body.diagram
     newDiagram = JSON.parse(newDiagram)
-    Diagnostic.findOneAndUpdate(query, { diagram: newDiagram }, { upsert: true }, function (err) {
+    Diagnostic.findOneAndUpdate(query, { diagram: newDiagram, published: false }, { upsert: true }, function (err) {
         if (err) {
             console.log(err)
             return res.send(500, { error: err})
@@ -463,6 +463,7 @@ exports.list = function (req, res){
 exports.setStatus = function (req,res){
     //primeste id si status(true/false)
     let query = { 'idgen': req.body.id }
+    console.log(req.body.id)
     let status = req.body.status
 
     Diagnostic.findOneAndUpdate(query, { published: status }, { upsert: true }, function (err) {
@@ -470,3 +471,4 @@ exports.setStatus = function (req,res){
         return res.send('Succesfully set diagram published status.')
     });
 }
+

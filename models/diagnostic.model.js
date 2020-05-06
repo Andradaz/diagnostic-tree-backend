@@ -6,7 +6,6 @@ let DiagnosticSchema  = new Schema({
     name: {type: String},
     link: {type: String},
     published: {type: Boolean},
-    index: {type: Number},
     description: {type: String},
     idgen: {type: String},
     rules: [{

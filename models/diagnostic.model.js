@@ -5,7 +5,9 @@ mongoose.set('useFindAndModify', false);
 let DiagnosticSchema  = new Schema({
     name: {type: String},
     link: {type: String},
-    publish: {type: String},
+    published: {type: Boolean},
+    index: {type: Number},
+    description: {type: String},
     idgen: {type: String},
     rules: [{
         idnode: String,

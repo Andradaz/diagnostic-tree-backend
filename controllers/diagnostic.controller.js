@@ -449,3 +449,24 @@ exports.setDiagram = function (req, res) {
         return res.send('Succesfully saved diagram in diagnostic.')
     });
 }
+
+exports.list = function (req, res){
+    Diagnostic.find(function(err, diagrams){
+        if (err) {
+            console.log("Error while extracting list. " + err)
+            res.send("Error while extracting list. " + err)
+        }
+        res.send(diagrams)
+    })
+}
+
+exports.setStatus = function (req,res){
+    //primeste id si status(true/false)
+    let query = { 'idgen': req.body.id }
+    let status = req.body.status
+
+    Diagnostic.findOneAndUpdate(query, { published: status }, { upsert: true }, function (err) {
+        if (err) return res.send(500, { error: err })
+        return res.send('Succesfully set diagram published status.')
+    });
+}

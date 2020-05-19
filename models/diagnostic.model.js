@@ -13,7 +13,8 @@ let DiagnosticSchema  = new Schema({
         variable: String,
         operator: String,
         parameter: String,
-        error: Boolean
+        error: Boolean,
+        solution: Boolean
     }],
     variables: [],
     diagram: [{

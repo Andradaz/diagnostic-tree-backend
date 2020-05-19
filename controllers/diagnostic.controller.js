@@ -702,3 +702,30 @@ exports.getRuleSolutionForNode = function (req, res) {
         }
     })
 }
+
+
+//primeste id-ul diagramei si returneaza lista de variabile folosite
+exports.getVariableList = function (req, res) {
+    let query = { 'idgen': req.body.idgen }
+    let findEntry = new Promise((resolve, reject) => {
+        Diagnostic.findOne(query, function (err, diagnostic) {
+            if (err) return res.send(500, { error: err })
+            if (diagnostic === null) {
+                resolve(null)
+            } else {
+                resolve(diagnostic.variables)
+            }
+        })
+    })
+
+    findEntry.then((list)=>{
+        //Dacă nu există diagramă creată pentru idgen
+        //Sau dacă Rules nu are niciun element
+        if (list === null || isEmptyObject(list)) {
+            res.send(null)
+        }else{
+            res.send(list)
+        }
+    })
+
+}

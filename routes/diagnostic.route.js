@@ -19,4 +19,5 @@ router.post('/setRuleError', diagnostic_controller.setRuleError)
 router.post('/getRuleErrorForNode', diagnostic_controller.getRuleErrorForNode)
 router.post('/setRuleSolution', diagnostic_controller.setRuleSolution)
 router.post('/getRuleSolutionForNode', diagnostic_controller.getRuleSolutionForNode)
+router.post('/getVariableList', diagnostic_controller.getVariableList)
 module.exports = router

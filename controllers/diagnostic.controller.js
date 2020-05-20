@@ -705,36 +705,17 @@ exports.getRuleSolutionForNode = function (req, res) {
 }
 
 
-//primeste id-ul diagramei si returneaza lista de variabile folosite
-exports.getVariableList = function (req, res) {
-    let query = { 'idgen': req.body.idgen }
-    let findEntry = new Promise((resolve, reject) => {
-        Diagnostic.findOne(query, function (err, diagnostic) {
-            if (err) return res.send(500, { error: err })
-            if (diagnostic === null) {
-                resolve(null)
-            } else {
-                resolve(diagnostic.variables)
-            }
-        })
-    })
-
-    findEntry.then((list)=>{
-        //Dacă nu există diagramă creată pentru idgen
-        //Sau dacă Rules nu are niciun element
-        if (list === null || isEmptyObject(list)) {
-            res.send(null)
-        }else{
-            res.send(list)
-        }
-    })
-
-}
 
 //Returnam modelul GoJS al diagramei
-//primeste idgen
+//primeste idgen și valoarea parametriilor
+//ex:
+//data = {
+//     "idgen": "SKSFNSDJKNJ",
+//     "inputs": []
+// }
 exports.getDiagramModel = function(req,res){
     let query = { 'idgen': req.body.idgen }
+    let inputs = req.body.inputs
     let findEntry = new Promise((resolve, reject) => {
         Diagnostic.findOne(query, function (err, diagnostic) {
             if (err) return res.send(500, { error: err })
@@ -752,6 +733,24 @@ exports.getDiagramModel = function(req,res){
             res.send(diagram)
         }
     })
+}
+
+//Save input
+//primeste idgen
+//primeste lista cu input-uri in functie de indecsi
+exports.saveComputeInputs =  function(req,res) {
+    let query = { 'idgen': req.body.idgen }
+    let findEntry = new Promise((resolve, reject) => {
+        Diagnostic.findOne(query, function (err, diagnostic) {
+            if (err) return res.send(500, { error: err })
+            if (diagnostic === null) {
+                resolve(null)
+            } else {
+                resolve(diagnostic.input)
+            }
+        })
+    })
+
 }
 
 ///Compute diagram////////////////////////////////////////////////////////////////////////////////////

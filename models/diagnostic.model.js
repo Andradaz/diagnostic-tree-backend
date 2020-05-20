@@ -17,6 +17,7 @@ let DiagnosticSchema  = new Schema({
         solution: Boolean
     }],
     variables: [],
+    inputs: [],
     diagram: [{
         class: String,
         nodeDataArray: [{

@@ -706,13 +706,9 @@ exports.getRuleSolutionForNode = function (req, res) {
 
 
 
+
+
 //Returnam modelul GoJS al diagramei
-//primeste idgen și valoarea parametriilor
-//ex:
-//data = {
-//     "idgen": "SKSFNSDJKNJ",
-//     "inputs": []
-// }
 exports.getDiagramModel = function(req,res){
     let query = { 'idgen': req.body.idgen }
     let inputs = req.body.inputs
@@ -735,10 +731,8 @@ exports.getDiagramModel = function(req,res){
     })
 }
 
-//Save input
-//primeste idgen
-//primeste lista cu input-uri in functie de indecsi
-exports.saveComputeInputs =  function(req,res) {
+
+exports.getVariableList = function (req,res) {
     let query = { 'idgen': req.body.idgen }
     let findEntry = new Promise((resolve, reject) => {
         Diagnostic.findOne(query, function (err, diagnostic) {
@@ -746,20 +740,29 @@ exports.saveComputeInputs =  function(req,res) {
             if (diagnostic === null) {
                 resolve(null)
             } else {
-                resolve(diagnostic.input)
+                resolve(diagnostic.variables)
             }
         })
     })
 
+    findEntry.then((variables)=>{
+        if (variables === null) {
+            res.send([])
+        }else{
+            res.send(variables)
+        }
+    })
 }
 
 ///Compute diagram////////////////////////////////////////////////////////////////////////////////////
-
-
-//primeste id-ul diagramei
+//primeste idgen și valoarea parametriilor
+//ex:
+//data = {
+//     "idgen": "SKSFNSDJKNJ",
+//     "inputs": []
+// }
 //returneaza un array cu calea care trebuie colorata
 exports.compute = function(req,res){
-    
     let query = { 'idgen': req.body.idgen }
     let findEntry = new Promise((resolve, reject) => {
         Diagnostic.findOne(query, function (err, diagnostic) {

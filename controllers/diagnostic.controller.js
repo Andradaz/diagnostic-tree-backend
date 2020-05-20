@@ -4,6 +4,7 @@ exports.test = function (req, res) {
     res.send('Diagnostic Schema: Greetings from the Test Controller!')
 }
 
+
 exports.setDiagnosticName = function (req, res) {
     //primeste ceva de forma:
     // name: " ",
@@ -728,4 +729,60 @@ exports.getVariableList = function (req, res) {
         }
     })
 
+}
+
+//Returnam modelul GoJS al diagramei
+//primeste idgen
+exports.getDiagramModel = function(req,res){
+    let query = { 'idgen': req.body.idgen }
+    let findEntry = new Promise((resolve, reject) => {
+        Diagnostic.findOne(query, function (err, diagnostic) {
+            if (err) return res.send(500, { error: err })
+            if (diagnostic === null) {
+                resolve(null)
+            } else {
+                resolve(diagnostic.diagram)
+            }
+        })
+    })
+    findEntry.then((diagram) => {
+        if (diagram === null || isEmptyObject(diagram)) {
+            res.send(null)
+        }else{
+            res.send(diagram)
+        }
+    })
+}
+
+///Compute diagram////////////////////////////////////////////////////////////////////////////////////
+
+
+//primeste id-ul diagramei
+//returneaza un array cu calea care trebuie colorata
+exports.compute = function(req,res){
+    
+    let query = { 'idgen': req.body.idgen }
+    let findEntry = new Promise((resolve, reject) => {
+        Diagnostic.findOne(query, function (err, diagnostic) {
+            if (err) return res.send(500, { error: err })
+            if (diagnostic === null) {
+                resolve(null)
+            } else {
+                resolve(diagnostic)
+            }
+        })
+    })
+
+    findEntry.then((diagram) => {
+        let rules = diagram.rules
+        let nodeDataArray = diagram.diagram[0].nodeDataArray
+        let linkDataArray = diagram.diagram[0].linkDataArray
+        console.log("Rules")
+        console.log(rules)
+        console.log("NodeDataArray")
+        console.log(nodeDataArray)
+        console.log("LinkDataArray")
+        console.log(linkDataArray)
+        res.send(200)
+    })
 }

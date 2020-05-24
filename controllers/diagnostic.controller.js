@@ -207,7 +207,7 @@ exports.getStringNodeRules = function (req, res) {
                 }
                 if (description !== undefined) {
                     res.send(description)
-                }else{
+                } else {
                     res.send([])
                 }
             } else {
@@ -771,6 +771,178 @@ exports.compute = function (req, res) {
 
         //functie care ne construieste matricea descrisa mai sus
         let matrix = animationMatrix(nodeDataArray, path)
+        res.send(matrix)
+    })
+}
+
+
+//#####################################################################################################
+//##################COMPUTE DIAGRAM V2#################################################################
+///Compute diagram////////////////////////////////////////////////////////////////////////////////////
+//primeste idgen și valoarea parametriilor
+//ex:
+//data = {
+//     "idgen": "SKSFNSDJKNJ",
+//     "inputs": []
+// }
+//returneaza un o matrice cu culorile nodurilor modificate in functie de traseul calculat,
+//pentru a realiza animatia
+//nodeDataArray pas 1 colorat
+//nodeDataArray pas 2 colorat
+//.....
+
+function initializeMidNodes2(rules) {
+    for (i = 0; i < rules.length; i++) {
+        let type = rules[i].nodeType
+        console.log("nodurile eroare si solutie")
+        console.log(type)
+        if (type !== "solution" || type !== "error") {
+            rules[i].nodeType = "mid"
+        }
+    }
+    return rules;
+}
+
+function getRuleNode2(rules, idnode) {
+    for (i = 0; i < rules.length; i++) {
+        if (rules[i].idnode == idnode)
+            return rules[i]
+    }
+    return "final"
+}
+
+//returneaza id-ul nodului care are ramura true/false si 
+//care il are ca tata nodul trimis ca parametru
+function findChild2(parent, link, linkDataArray) {
+    for (i = 0; i < linkDataArray.length; i++) {
+        if (linkDataArray[i].from === parent && linkDataArray[i].text == link) {
+            child = linkDataArray[i].to
+            return child
+        }
+    }
+    return "final"
+}
+
+
+//returneaza matricea descrisa mai sus
+//primeste nodeDataArray si traseul
+//JS face o copie prin referinta, dar noi
+//avem nevoie de o clona deci folosim
+//stringify si parse pentru deep copy
+function animationMatrix2(nodeDataArray, path) {
+    let matrix = []
+    let listCopy = JSON.parse(JSON.stringify(nodeDataArray))
+    matrix.push(JSON.parse(JSON.stringify(listCopy)))
+
+    for (i = 0; i < path.length; i++) {
+        let index = listCopy.findIndex((node) => { return node.key === path[i] })
+        listCopy[index].color = '#78e1ff'
+        matrix.push(JSON.parse(JSON.stringify(listCopy)))
+    }
+
+    console.log(matrix)
+    return matrix
+}
+
+function computeRule(currentNodeRule, inputs){
+            let operator = currentNodeRule.operator
+            let param = parseFloat(currentNodeRule.parameter)
+            let variable = currentNodeRule.variable
+            let input = parseFloat(inputs[variable])
+            let expression
+            //calculam regula nodului utilizand input-ul de la user
+            switch (operator) {
+                case '10':
+                    expression = (input > param)
+                    console.log("case10")
+                    break;
+                case '20':
+                    expression = (input <= param)
+                    console.log("case20")
+                    break;
+                case '30':
+                    expression = (input === param)
+                    console.log("case30")
+                    break;
+            }
+            console.log("expresie in functie")
+            console.log(expression)
+            console.log(input)
+            console.log(param)
+            return expression
+}
+
+
+exports.compute2 = function (req, res) {
+    let query = { 'idgen': req.body.idgen }
+    let inputs = req.body.inputs
+    let findEntry = new Promise((resolve, reject) => {
+        Diagnostic.findOne(query, function (err, diagnostic) {
+            if (err) return res.send(500, { error: err })
+            if (diagnostic === null) {
+                resolve(null)
+            } else {
+                resolve(diagnostic)
+            }
+        })
+    })
+
+    findEntry.then((diagram) => {
+        let rules = diagram.rules
+        let nodeDataArray = diagram.diagram[0].nodeDataArray
+        let linkDataArray = diagram.diagram[0].linkDataArray
+
+        //In prezent, in baza de date avem marcate doar nodurile eroare/solutie (deci aceste noduri
+        //le avem in rules)
+        //Construim o functie care returneaza o lista ce contine si nodurile intermediare
+        rules = initializeMidNodes2(rules);
+        console.log("Noul rules dupa initializare")
+        console.log(rules)
+
+        //Nodul de start va fi nodul care nu are parinte. In cazul nostru, primul nod din nodeDataArray va fi
+        //radacina. ++ ulterior pot crea o functie care gaseste nodul fara parinte, daca e cazul
+        //curentNode retine id-ul nodului curent
+        let currentNode = nodeDataArray[0].key
+
+        //construim o functie care ne returneaza regulile aferente nodului
+        let currentNodeRule = getRuleNode2(rules, currentNode)
+        console.log("Current Node Rule")
+        console.log(currentNodeRule)
+        let path = []
+        path.push(currentNode)
+        //cat timp suntem intr-un nod intermediar
+        while ((currentNodeRule.nodeType !== "solution" ||
+            currentNodeRule.nodeType !== "error") && (currentNode !== "final")) {
+            console.log("VALOARE IFFFF")
+            console.log(currentNode !== "final")
+            console.log("nodeType")
+            console.log(currentNodeRule.nodeType)
+
+            //Functie pentru calcularea regulilor
+            //###aici apelez
+            let expression = true
+            for(let i = 0; i<currentNodeRule.rule.length; i++){
+                let result = computeRule(currentNodeRule.rule[i],inputs)
+                expression = expression && result
+            }
+
+            console.log("expresie")
+            console.log(expression)
+            let child = findChild2(currentNode, expression, linkDataArray)
+            console.log("child")
+            console.log(child)
+            if(child !== "final"){
+                path.push(child)
+            }
+            currentNode = child
+            console.log("trace")
+            console.log(path)
+            currentNodeRule = getRuleNode2(rules, currentNode)
+            console.log(currentNodeRule)
+        }
+
+        //functie care ne construieste matricea descrisa mai sus
+        let matrix = animationMatrix2(nodeDataArray, path)
         res.send(matrix)
     })
 }

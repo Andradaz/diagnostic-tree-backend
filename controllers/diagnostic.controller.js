@@ -88,13 +88,17 @@ function isEmptyObject(obj) {
     return true;
 }
 
-exports.setRuleVariable = function (req, res) {
-    //primeste ceva de forma
-    // variable: " ",
-    //idgen: " ",
-    //idnod:
-    let query = { 'idgen': req.body.idgen }
-    let newVariable = req.body.variable
+//primeste un req de forma
+// rule: {
+//     variable: ,
+//     operator: ,
+//     parameter: ,
+//     description: 
+// }
+// idgen: ,
+// idnod: 
+exports.setRule = function (req, res) {
+    let query = { "idgen": req.body.idgen }
     let findEntry = new Promise((resolve, reject) => {
         Diagnostic.findOne(query, function (err, diagnostic) {
             if (err) return res.send(500, { error: err })
@@ -110,29 +114,33 @@ exports.setRuleVariable = function (req, res) {
     findEntry.then((list) => {
         listRules = list
 
+        //Daca nu exista diagrama creata pentru idgen
         if (list === null) {
             Diagnostic.create({
                 "idgen": req.body.idgen,
                 "rules": [{
-                    "variable": req.body.variable,
-                    "idnode": req.body.idnode
+                    "idnode": req.body.idnode,
+                    "rule": [req.body.rule]
                 }]
             }, function (err) {
                 if (err) return res.send(500, { error: err })
                 res.send('Succesfully saved new variable in rules.')
             });
         } else {
-            if (isEmptyObject(list)) {
+            //Dacă Rules nu are niciun element
+            if (isEmptyObject(listRules)) {
                 listRules = []
                 listRules.push({
                     "idnode": req.body.idnode,
-                    "variable": req.body.variable
+                    "rule": [req.body.rule]
                 })
             }
             else {
+                //Dacă rules are mai multe elemente
                 let i = 0
                 let index = 0
                 let exist = false
+                //verificam daca exista in bd nodul din request
                 while (i < listRules.length) {
                     if (req.body.idnode === listRules[i].idnode) {
                         exist = true
@@ -140,188 +148,36 @@ exports.setRuleVariable = function (req, res) {
                     }
                     i++
                 }
+                //Daca exista un nod cu acelasi id, adaugam lui Rule noua regula
                 if (exist) {
-                    listRules[index].variable = newVariable
+                    listRules[index].rule.push(req.body.rule)
                 } else {
+                    //Daca nu exista un nod cu acelasi id, il adaugam la finalul listei
                     listRules.push({
                         "idnode": req.body.idnode,
-                        "variable": req.body.variable
+                        "rule": [req.body.rule]
                     })
                 }
-
             }
             Diagnostic.findOneAndUpdate(query, { rules: listRules }, { upsert: true }, function (err) {
                 if (err) return res.send(500, { error: err })
                 return res.send('Succesfully saved new variable in rules.')
             })
         }
-
     })
 }
 
-
-exports.setRuleOperator = function (req, res) {
-    //primeste ceva de forma
-    // operator: " ",
-    //idgen: " ",
-    //idnod:
-    let query = { 'idgen': req.body.idgen }
-    let newOperator = req.body.operator
+//primeste
+//"idgen"
+//"idnode"
+//returneaza un array de string-uri cu descrierea regulilor
+exports.getStringNodeRules = function (req, res) {
+    let query = { "idgen": req.body.idgen }
     let findEntry = new Promise((resolve, reject) => {
         Diagnostic.findOne(query, function (err, diagnostic) {
             if (err) return res.send(500, { error: err })
             if (diagnostic === null) {
-                resolve(null)
-            } else {
-                resolve(diagnostic.rules)
-            }
-        })
-    })
-
-    let listRules
-    findEntry.then((list) => {
-        listRules = list
-        //Dacă nu există diagramă creată pentru idgen o creăm acum
-        if (list === null) {
-            Diagnostic.create({
-                "idgen": req.body.idgen,
-                "rules": [{
-                    "operator": req.body.operator,
-                    "idnode": req.body.idnode
-                }]
-            }, function (err) {
-                if (err) return res.send(500, { error: err })
-                res.send('Succesfully saved new operator in rules.')
-            });
-        } else {
-            //Dacă Rules nu are niciun element
-            if (isEmptyObject(list)) {
-                listRules = []
-                listRules.push({
-                    "idnode": req.body.idnode,
-                    "operator": req.body.operator,
-                })
-            }
-            else {
-                //Dacă rules are mai multe elemente
-                let i = 0
-                let index = 0
-                let exist = false
-                //verificam daca exista in bd nodul din request
-                while (i < listRules.length) {
-                    if (req.body.idnode === listRules[i].idnode) {
-                        exist = true
-                        index = i
-                    }
-                    i++
-                }
-                //Daca exista un nod cu acelasi id il editam
-                if (exist) {
-                    listRules[index].operator = newOperator
-                } else {
-                    //Daca nu exista un nod cu acelasi id, il adaugam la finalul listei
-                    listRules.push({
-                        "idnode": req.body.idnode,
-                        "operator": req.body.operator
-                    })
-                }
-
-            }
-            Diagnostic.findOneAndUpdate(query, { rules: listRules }, { upsert: true }, function (err) {
-                if (err) return res.send(500, { error: err })
-                return res.send('Succesfully saved new operator in rules.')
-            })
-        }
-
-    })
-}
-
-exports.setRuleParameter = function (req, res) {
-    //primeste ceva de forma
-    // parameter: " ",
-    //idgen: " ",
-    //idnod:
-    let query = { 'idgen': req.body.idgen }
-    let newParameter = req.body.parameter
-    let findEntry = new Promise((resolve, reject) => {
-        Diagnostic.findOne(query, function (err, diagnostic) {
-            if (err) return res.send(500, { error: err })
-            if (diagnostic === null) {
-                resolve(null)
-            } else {
-                resolve(diagnostic.rules)
-            }
-        })
-    })
-
-    let listRules
-    findEntry.then((list) => {
-        listRules = list
-        //Dacă nu există diagramă creată pentru idgen o creăm acum
-        if (list === null) {
-            Diagnostic.create({
-                "idgen": req.body.idgen,
-                "rules": [{
-                    "parameter": req.body.parameter,
-                    "idnode": req.body.idnode
-                }]
-            }, function (err) {
-                if (err) return res.send(500, { error: err })
-                res.send('Succesfully saved new operator in rules.')
-            });
-        } else {
-            //Dacă Rules nu are niciun element
-            if (isEmptyObject(list)) {
-                listRules = []
-                listRules.push({
-                    "idnode": req.body.idnode,
-                    "parameter": req.body.parameter,
-                })
-            }
-            else {
-                //Dacă rules are mai multe elemente
-                let i = 0
-                let index = 0
-                let exist = false
-                //verificam daca exista in bd nodul din request
-                while (i < listRules.length) {
-                    if (req.body.idnode === listRules[i].idnode) {
-                        exist = true
-                        index = i
-                    }
-                    i++
-                }
-                //Daca exista un nod cu acelasi id il editam
-                if (exist) {
-                    listRules[index].parameter = newParameter
-                } else {
-                    //Daca nu exista un nod cu acelasi id, il adaugam la finalul listei
-                    listRules.push({
-                        "idnode": req.body.idnode,
-                        "parameter": req.body.parameter
-                    })
-                }
-
-            }
-            Diagnostic.findOneAndUpdate(query, { rules: listRules }, { upsert: true }, function (err) {
-                if (err) return res.send(500, { error: err })
-                return res.send('Succesfully saved new parameter in rules.')
-            })
-        }
-
-    })
-}
-
-exports.getRuleVariableForNode = function (req, res) {
-    //primeste
-    //"idgen":
-    //"idnode":
-    let query = { 'idgen': req.body.idgen }
-    let findEntry = new Promise((resolve, reject) => {
-        Diagnostic.findOne(query, function (err, diagnostic) {
-            if (err) return res.send(500, { error: err })
-            if (diagnostic === null) {
-                resolve(null)
+                resolve([])
             } else {
                 resolve(diagnostic.rules)
             }
@@ -333,36 +189,48 @@ exports.getRuleVariableForNode = function (req, res) {
         //Dacă nu există diagramă creată pentru idgen
         //Sau dacă Rules nu are niciun element
         if (list === null || isEmptyObject(list)) {
-            res.send(null)
+            res.send([])
         } else {
             //Dacă rules are elemente
-            let data
+            let rule
             for (let i = 0; i < listRules.length; i++) {
                 if (listRules[i].idnode === req.body.idnode) {
-                    data = listRules[i].variable
+                    rule = listRules[i].rule
                 }
             }
-            if (data !== undefined) {
-                res.send(data)
-            } else {
-                res.send("not defined")
-            }
 
+            let description = []
+            console.log(rule)
+            if (rule !== null && !isEmptyObject(rule)) {
+                for (i = 0; i < rule.length; i++) {
+                    description.push(rule[i].description)
+                }
+                if (description !== undefined) {
+                    res.send(description)
+                }else{
+                    res.send([])
+                }
+            } else {
+                res.send([])
+            }
         }
     })
+
 }
 
-exports.getRuleParameterForNode = function (req, res) {
-    //primeste
-    //"idgen":
-    //"idnode":
-    //si returneaza regulile pt idnode-ul respectiv
-    let query = { 'idgen': req.body.idgen }
+//primeste
+//idgen
+//idnode
+//indicele regulii
+//sterge regula respectiva
+exports.deleteRuleForNode = function (req, res) {
+    let query = { "idgen": req.body.idgen }
+    let index = req.body.index
     let findEntry = new Promise((resolve, reject) => {
         Diagnostic.findOne(query, function (err, diagnostic) {
             if (err) return res.send(500, { error: err })
             if (diagnostic === null) {
-                resolve(null)
+                resolve([])
             } else {
                 resolve(diagnostic.rules)
             }
@@ -371,68 +239,17 @@ exports.getRuleParameterForNode = function (req, res) {
 
     findEntry.then((list) => {
         listRules = list
-        //Dacă nu există diagramă creată pentru idgen
-        //Sau dacă Rules nu are niciun element
-        if (list === null || isEmptyObject(list)) {
-            res.send("este null ")
-        } else {
-            //Dacă rules are elemente
-            let data
-            for (let i = 0; i < listRules.length; i++) {
-                if (listRules[i].idnode === req.body.idnode) {
-                    data = listRules[i].parameter
-                }
+        for (i = 0; i < listRules.length; i++) {
+            if (listRules[i].idnode === req.body.idnode) {
+                listRules[i].rule.splice(index, 1)
             }
-            if (data !== undefined) {
-                res.send(data)
-            } else {
-                res.send(data)
-            }
-
         }
-    })
-}
-
-exports.getRuleOperatorForNode = function (req, res) {
-    //primeste
-    //"idgen":
-    //"idnode":
-    //si returneaza regulile pt idnode-ul respectiv
-    let query = { 'idgen': req.body.idgen }
-    let findEntry = new Promise((resolve, reject) => {
-        Diagnostic.findOne(query, function (err, diagnostic) {
+        Diagnostic.findOneAndUpdate(query, { rules: listRules }, { upsert: true }, function (err) {
             if (err) return res.send(500, { error: err })
-            if (diagnostic === null) {
-                resolve(null)
-            } else {
-                resolve(diagnostic.rules)
-            }
+            return res.send('Succesfully deleted rule at index ' + index)
         })
     })
 
-    findEntry.then((list) => {
-        listRules = list
-        //Dacă nu există diagramă creată pentru idgen
-        //Sau dacă Rules nu are niciun element
-        if (list === null || isEmptyObject(list)) {
-            res.send(null)
-        } else {
-            //Dacă rules are elemente
-            let data
-            for (let i = 0; i < listRules.length; i++) {
-                if (listRules[i].idnode === req.body.idnode) {
-                    data = listRules[i].operator
-                }
-            }
-            if (data !== undefined) {
-                res.send(data)
-            } else {
-                data = "akljm"
-                res.send(data)
-            }
-
-        }
-    })
 }
 
 exports.setDiagram = function (req, res) {
@@ -472,13 +289,12 @@ exports.setStatus = function (req, res) {
     });
 }
 
-exports.setRuleError = function (req, res) {
-    //primeste ceva de forma
-    // error: true/false,
-    //idgen: " ",
-    //idnod:
+//primeste ceva de forma
+//type: "mid,solution,error",
+//idgen: " ",
+//idnod:
+exports.setNodeType = function (req, res) {
     let query = { 'idgen': req.body.idgen }
-    let newError = req.body.error
     let findEntry = new Promise((resolve, reject) => {
         Diagnostic.findOne(query, function (err, diagnostic) {
             if (err) return res.send(500, { error: err })
@@ -498,20 +314,20 @@ exports.setRuleError = function (req, res) {
             Diagnostic.create({
                 "idgen": req.body.idgen,
                 "rules": [{
-                    "error": req.body.error,
-                    "idnode": req.body.idnode
+                    "idnode": req.body.idnode,
+                    "nodeType": req.body.type
                 }]
             }, function (err) {
                 if (err) return res.send(500, { error: err })
-                res.send('Succesfully saved new operator in rules.')
+                res.send('Succesfully set node type.')
             });
         } else {
             //Dacă Rules nu are niciun element
-            if (isEmptyObject(list)) {
+            if (isEmptyObject(listRules)) {
                 listRules = []
                 listRules.push({
                     "idnode": req.body.idnode,
-                    "error": req.body.error,
+                    "nodeType": req.body.type
                 })
             }
             else {
@@ -527,37 +343,36 @@ exports.setRuleError = function (req, res) {
                     }
                     i++
                 }
-                //Daca exista un nod cu acelasi id il editam
+                //Daca exista un nod cu acelasi id, adaugam tipul
                 if (exist) {
-                    listRules[index].error = newError
+                    listRules[index].nodeType = req.body.type
                 } else {
                     //Daca nu exista un nod cu acelasi id, il adaugam la finalul listei
                     listRules.push({
                         "idnode": req.body.idnode,
-                        "error": req.body.error
+                        "nodeType": req.body.type
                     })
                 }
-
             }
             Diagnostic.findOneAndUpdate(query, { rules: listRules }, { upsert: true }, function (err) {
                 if (err) return res.send(500, { error: err })
-                return res.send('Succesfully saved new parameter in rules.')
+                return res.send('Succesfully set node type.')
             })
         }
-
     })
 }
 
-exports.getRuleErrorForNode = function (req, res) {
-    //primeste
-    //"idgen":
-    //"idnode":
-    let query = { 'idgen': req.body.idgen }
+//primeste idgen
+//primeste idnode
+//returneaza nodeType
+exports.getNodeType = function (req, res) {
+    let query = { "idgen": req.body.idgen }
+    console.log(req.body)
     let findEntry = new Promise((resolve, reject) => {
         Diagnostic.findOne(query, function (err, diagnostic) {
             if (err) return res.send(500, { error: err })
             if (diagnostic === null) {
-                resolve(null)
+                resolve([])
             } else {
                 resolve(diagnostic.rules)
             }
@@ -568,141 +383,197 @@ exports.getRuleErrorForNode = function (req, res) {
         listRules = list
         //Dacă nu există diagramă creată pentru idgen
         //Sau dacă Rules nu are niciun element
-        if (list === null || isEmptyObject(list)) {
-            res.send(null)
+        if (list === null || isEmptyObject(list) || list === "undefined") {
+            let data = {
+                nodeType: "mid"
+            }
+            console.log("1")
+            res.send(data)
         } else {
             //Dacă rules are elemente
-            let data
+            console.log("LIST RULES")
+            console.log(listRules)
+            let nodeType
             for (let i = 0; i < listRules.length; i++) {
                 if (listRules[i].idnode === req.body.idnode) {
-                    data = listRules[i].error
+                    nodeType = listRules[i].nodeType
                 }
             }
-            if (data !== undefined) {
+            if (nodeType !== undefined) {
+                console.log(nodeType)
+                let data = {
+                    nodeType: nodeType
+                }
                 res.send(data)
             } else {
-                res.send("not defined")
-            }
-
-        }
-    })
-}
-
-exports.setRuleSolution = function (req, res) {
-    //primeste ceva de forma
-    // solution: true/false,
-    //idgen: " ",
-    //idnod:
-    let query = { 'idgen': req.body.idgen }
-    let newSolution = req.body.solution
-    let findEntry = new Promise((resolve, reject) => {
-        Diagnostic.findOne(query, function (err, diagnostic) {
-            if (err) return res.send(500, { error: err })
-            if (diagnostic === null) {
-                resolve(null)
-            } else {
-                resolve(diagnostic.rules)
-            }
-        })
-    })
-
-    let listRules
-    findEntry.then((list) => {
-        listRules = list
-        //Dacă nu există diagramă creată pentru idgen o creăm acum
-        if (list === null) {
-            Diagnostic.create({
-                "idgen": req.body.idgen,
-                "rules": [{
-                    "error": req.body.solution,
-                    "idnode": req.body.idnode
-                }]
-            }, function (err) {
-                if (err) return res.send(500, { error: err })
-                res.send('Succesfully saved new operator in rules.')
-            });
-        } else {
-            //Dacă Rules nu are niciun element
-            if (isEmptyObject(list)) {
-                listRules = []
-                listRules.push({
-                    "idnode": req.body.idnode,
-                    "error": req.body.solution,
-                })
-            }
-            else {
-                //Dacă rules are mai multe elemente
-                let i = 0
-                let index = 0
-                let exist = false
-                //verificam daca exista in bd nodul din request
-                while (i < listRules.length) {
-                    if (req.body.idnode === listRules[i].idnode) {
-                        exist = true
-                        index = i
-                    }
-                    i++
+                let data = {
+                    nodeType: "mid"
                 }
-                //Daca exista un nod cu acelasi id il editam
-                if (exist) {
-                    listRules[index].solution = newSolution
-                } else {
-                    //Daca nu exista un nod cu acelasi id, il adaugam la finalul listei
-                    listRules.push({
-                        "idnode": req.body.idnode,
-                        "error": req.body.solution
-                    })
-                }
-
-            }
-            Diagnostic.findOneAndUpdate(query, { rules: listRules }, { upsert: true }, function (err) {
-                if (err) return res.send(500, { error: err })
-                return res.send('Succesfully saved new parameter in rules.')
-            })
-        }
-
-    })
-}
-
-exports.getRuleSolutionForNode = function (req, res) {
-    //primeste
-    //"idgen":
-    //"idnode":
-    let query = { 'idgen': req.body.idgen }
-    let findEntry = new Promise((resolve, reject) => {
-        Diagnostic.findOne(query, function (err, diagnostic) {
-            if (err) return res.send(500, { error: err })
-            if (diagnostic === null) {
-                resolve(null)
-            } else {
-                resolve(diagnostic.rules)
-            }
-        })
-    })
-
-    findEntry.then((list) => {
-        listRules = list
-        //Dacă nu există diagramă creată pentru idgen
-        //Sau dacă Rules nu are niciun element
-        if (list === null || isEmptyObject(list)) {
-            res.send(null)
-        } else {
-            //Dacă rules are elemente
-            let data
-            for (let i = 0; i < listRules.length; i++) {
-                if (listRules[i].idnode === req.body.idnode) {
-                    data = listRules[i].solution
-                }
-            }
-            if (data !== undefined) {
                 res.send(data)
-            } else {
-                res.send("not defined")
             }
-
         }
     })
+
 }
+
+//     })
+// }
+
+// exports.getRuleErrorForNode = function (req, res) {
+//     //primeste
+//     //"idgen":
+//     //"idnode":
+//     let query = { 'idgen': req.body.idgen }
+//     let findEntry = new Promise((resolve, reject) => {
+//         Diagnostic.findOne(query, function (err, diagnostic) {
+//             if (err) return res.send(500, { error: err })
+//             if (diagnostic === null) {
+//                 resolve(null)
+//             } else {
+//                 resolve(diagnostic.rules)
+//             }
+//         })
+//     })
+
+//     findEntry.then((list) => {
+//         listRules = list
+//         //Dacă nu există diagramă creată pentru idgen
+//         //Sau dacă Rules nu are niciun element
+//         if (list === null || isEmptyObject(list)) {
+//             res.send(null)
+//         } else {
+//             //Dacă rules are elemente
+//             let data
+//             for (let i = 0; i < listRules.length; i++) {
+//                 if (listRules[i].idnode === req.body.idnode) {
+//                     data = listRules[i].error
+//                 }
+//             }
+//             if (data !== undefined) {
+//                 res.send(data)
+//             } else {
+//                 res.send("not defined")
+//             }
+
+//         }
+//     })
+// }
+
+// exports.setRuleSolution = function (req, res) {
+//     //primeste ceva de forma
+//     // solution: true/false,
+//     //idgen: " ",
+//     //idnod:
+//     let query = { 'idgen': req.body.idgen }
+//     let newSolution = req.body.solution
+//     let findEntry = new Promise((resolve, reject) => {
+//         Diagnostic.findOne(query, function (err, diagnostic) {
+//             if (err) return res.send(500, { error: err })
+//             if (diagnostic === null) {
+//                 resolve(null)
+//             } else {
+//                 resolve(diagnostic.rules)
+//             }
+//         })
+//     })
+
+//     let listRules
+//     findEntry.then((list) => {
+//         listRules = list
+//         //Dacă nu există diagramă creată pentru idgen o creăm acum
+//         if (list === null) {
+//             Diagnostic.create({
+//                 "idgen": req.body.idgen,
+//                 "rules": [{
+//                     "error": req.body.solution,
+//                     "idnode": req.body.idnode
+//                 }]
+//             }, function (err) {
+//                 if (err) return res.send(500, { error: err })
+//                 res.send('Succesfully saved new operator in rules.')
+//             });
+//         } else {
+//             //Dacă Rules nu are niciun element
+//             if (isEmptyObject(list)) {
+//                 listRules = []
+//                 listRules.push({
+//                     "idnode": req.body.idnode,
+//                     "error": req.body.solution,
+//                 })
+//             }
+//             else {
+//                 //Dacă rules are mai multe elemente
+//                 let i = 0
+//                 let index = 0
+//                 let exist = false
+//                 //verificam daca exista in bd nodul din request
+//                 while (i < listRules.length) {
+//                     if (req.body.idnode === listRules[i].idnode) {
+//                         exist = true
+//                         index = i
+//                     }
+//                     i++
+//                 }
+//                 //Daca exista un nod cu acelasi id il editam
+//                 if (exist) {
+//                     listRules[index].solution = newSolution
+//                 } else {
+//                     //Daca nu exista un nod cu acelasi id, il adaugam la finalul listei
+//                     listRules.push({
+//                         "idnode": req.body.idnode,
+//                         "error": req.body.solution
+//                     })
+//                 }
+
+//             }
+//             Diagnostic.findOneAndUpdate(query, { rules: listRules }, { upsert: true }, function (err) {
+//                 if (err) return res.send(500, { error: err })
+//                 return res.send('Succesfully saved new parameter in rules.')
+//             })
+//         }
+
+//     })
+// }
+
+// exports.getRuleSolutionForNode = function (req, res) {
+//     //primeste
+//     //"idgen":
+//     //"idnode":
+//     let query = { 'idgen': req.body.idgen }
+//     let findEntry = new Promise((resolve, reject) => {
+//         Diagnostic.findOne(query, function (err, diagnostic) {
+//             if (err) return res.send(500, { error: err })
+//             if (diagnostic === null) {
+//                 resolve(null)
+//             } else {
+//                 resolve(diagnostic.rules)
+//             }
+//         })
+//     })
+
+//     findEntry.then((list) => {
+//         listRules = list
+//         //Dacă nu există diagramă creată pentru idgen
+//         //Sau dacă Rules nu are niciun element
+//         if (list === null || isEmptyObject(list)) {
+//             res.send(null)
+//         } else {
+//             //Dacă rules are elemente
+//             let data
+//             for (let i = 0; i < listRules.length; i++) {
+//                 if (listRules[i].idnode === req.body.idnode) {
+//                     data = listRules[i].solution
+//                 }
+//             }
+//             if (data !== undefined) {
+//                 res.send(data)
+//             } else {
+//                 res.send("not defined")
+//             }
+
+//         }
+//     })
+// }
 
 
 
@@ -813,7 +684,7 @@ function animationMatrix(nodeDataArray, path) {
     let listCopy = JSON.parse(JSON.stringify(nodeDataArray))
     matrix.push(JSON.parse(JSON.stringify(listCopy)))
 
-    for(i=0;i<path.length;i++){
+    for (i = 0; i < path.length; i++) {
         let index = listCopy.findIndex((node) => { return node.key === path[i] })
         listCopy[index].color = '#78e1ff'
         matrix.push(JSON.parse(JSON.stringify(listCopy)))
@@ -859,8 +730,8 @@ exports.compute = function (req, res) {
         let path = []
         path.push(currentNode)
         //cat timp suntem intr-un nod intermediar
-        while (currentNodeRule.error !== true && currentNodeRule.solution !== true && currentNode !=="final" 
-        && currentNodeRule!=="final") {
+        while (currentNodeRule.error !== true && currentNodeRule.solution !== true && currentNode !== "final"
+            && currentNodeRule !== "final") {
             console.log("error")
             console.log(currentNodeRule.error)
             console.log("solution")

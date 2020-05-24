@@ -10,12 +10,13 @@ let DiagnosticSchema  = new Schema({
     idgen: {type: String},
     rules: [{
         idnode: String,
-        variable: String,
-        operator: String,
-        parameter: String,
-        error: Boolean,
-        solution: Boolean,
-        intermediate: Boolean,
+        nodeType: String,
+        rule: [{
+            variable: String,
+            operator: String,
+            parameter: String,
+            description: String
+            }]
     }],
     variables: [],
     diagram: [{

@@ -22,4 +22,7 @@ router.post('/deleteRule',diagnostic_controller.deleteRuleForNode)
 router.post('/setNodeType', diagnostic_controller.setNodeType)
 router.post('/getNodeType', diagnostic_controller.getNodeType)
 router.post('/compute2', diagnostic_controller.compute2)
+router.post('/setDescription', diagnostic_controller.setDiagnosticDescription)
+router.post('/getName', diagnostic_controller.getDiagnosticName)
+router.post('/getDescription', diagnostic_controller.getDiagnosticDescription)
 module.exports = router

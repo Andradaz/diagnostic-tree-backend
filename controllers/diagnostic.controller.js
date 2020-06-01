@@ -18,6 +18,62 @@ exports.setDiagnosticName = function (req, res) {
     });
 }
 
+exports.getDiagnosticName = function (req, res) {
+    let query = {'idgen': req.body.idgen}
+    let name = new Promise((resolve, reject) => {
+        Diagnostic.findOne(query, function (err, diagnostic) {
+            if (err) return res.send(500, { error: err })
+            if (diagnostic === null) {
+                resolve("Not found")
+            } else {
+                resolve(diagnostic.name)
+            }
+        })
+    })
+    name.then((name) =>{
+        let data = {
+            name: name
+        }
+        res.send(data)
+    })
+    
+}
+
+exports.getDiagnosticDescription = function (req, res) {
+    let query = {'idgen': req.body.idgen}
+    let name = new Promise((resolve, reject) => {
+        Diagnostic.findOne(query, function (err, diagnostic) {
+            if (err) return res.send(500, { error: err })
+            if (diagnostic === null) {
+                resolve("Not found")
+            } else {
+                resolve(diagnostic.description)
+            }
+        })
+    })
+    name.then((description) =>{
+        let data = {
+            description: description
+        }
+        res.send(data)
+    })
+    
+}
+
+
+exports.setDiagnosticDescription = function (req, res) {
+    //primeste ceva de forma:
+    // description: " ",
+    // idgen: " "
+    let query = { 'idgen': req.body.idgen }
+    let newDescription = req.body.description
+
+    Diagnostic.findOneAndUpdate(query, { description: newDescription }, { upsert: true }, function (err) {
+        if (err) return res.send(500, { error: err })
+        return res.send('Succesfully saved new name.')
+    });
+}
+
 exports.setDiagnosticVariable = function (req, res) {
     //primeste ceva de forma
     // variable: " ",
@@ -808,7 +864,7 @@ function getRuleNode2(rules, idnode) {
         if (rules[i].idnode == idnode)
             return rules[i]
     }
-    return "final"
+    return "not found"
 }
 
 //returneaza id-ul nodului care are ramura true/false si 
@@ -820,7 +876,7 @@ function findChild2(parent, link, linkDataArray) {
             return child
         }
     }
-    return "final"
+    return "not found"
 }
 
 
@@ -850,6 +906,10 @@ function computeRule(currentNodeRule, inputs){
             let variable = currentNodeRule.variable
             let input = parseFloat(inputs[variable])
             let expression
+
+            //if (input === "undefined" || input === " " ..etc)&& required === false
+            //return true
+
             //calculam regula nodului utilizand input-ul de la user
             switch (operator) {
                 case '10':
@@ -865,10 +925,6 @@ function computeRule(currentNodeRule, inputs){
                     console.log("case30")
                     break;
             }
-            console.log("expresie in functie")
-            console.log(expression)
-            console.log(input)
-            console.log(param)
             return expression
 }
 
@@ -892,13 +948,6 @@ exports.compute2 = function (req, res) {
         let nodeDataArray = diagram.diagram[0].nodeDataArray
         let linkDataArray = diagram.diagram[0].linkDataArray
 
-        //In prezent, in baza de date avem marcate doar nodurile eroare/solutie (deci aceste noduri
-        //le avem in rules)
-        //Construim o functie care returneaza o lista ce contine si nodurile intermediare
-        rules = initializeMidNodes2(rules);
-        console.log("Noul rules dupa initializare")
-        console.log(rules)
-
         //Nodul de start va fi nodul care nu are parinte. In cazul nostru, primul nod din nodeDataArray va fi
         //radacina. ++ ulterior pot crea o functie care gaseste nodul fara parinte, daca e cazul
         //curentNode retine id-ul nodului curent
@@ -906,40 +955,37 @@ exports.compute2 = function (req, res) {
 
         //construim o functie care ne returneaza regulile aferente nodului
         let currentNodeRule = getRuleNode2(rules, currentNode)
-        console.log("Current Node Rule")
-        console.log(currentNodeRule)
+        
         let path = []
         path.push(currentNode)
-        //cat timp suntem intr-un nod intermediar
-        while ((currentNodeRule.nodeType !== "solution" ||
-            currentNodeRule.nodeType !== "error") && (currentNode !== "final")) {
-            console.log("VALOARE IFFFF")
-            console.log(currentNode !== "final")
-            console.log("nodeType")
-            console.log(currentNodeRule.nodeType)
 
-            //Functie pentru calcularea regulilor
-            //###aici apelez
+        //cat timp suntem intr-un nod intermediar
+        while (currentNode!== "not found" && currentNodeRule!=="not found") {
+
+            console.log("Current Node Rule:")
+            console.log(currentNodeRule)
+            console.log("Current Node")
+            console.log(currentNode)
+
             let expression = true
             for(let i = 0; i<currentNodeRule.rule.length; i++){
                 let result = computeRule(currentNodeRule.rule[i],inputs)
                 expression = expression && result
             }
 
-            console.log("expresie")
-            console.log(expression)
             let child = findChild2(currentNode, expression, linkDataArray)
-            console.log("child")
+            console.log("Child")
             console.log(child)
-            if(child !== "final"){
+        
+            if(child !== "not found"){
                 path.push(child)
             }
+
             currentNode = child
-            console.log("trace")
-            console.log(path)
             currentNodeRule = getRuleNode2(rules, currentNode)
-            console.log(currentNodeRule)
         }
+        console.log("trace")
+        console.log(path)
 
         //functie care ne construieste matricea descrisa mai sus
         let matrix = animationMatrix2(nodeDataArray, path)

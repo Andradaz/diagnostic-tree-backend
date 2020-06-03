@@ -19,7 +19,7 @@ exports.setDiagnosticName = function (req, res) {
 }
 
 exports.getDiagnosticName = function (req, res) {
-    let query = {'idgen': req.body.idgen}
+    let query = { 'idgen': req.body.idgen }
     let name = new Promise((resolve, reject) => {
         Diagnostic.findOne(query, function (err, diagnostic) {
             if (err) return res.send(500, { error: err })
@@ -30,17 +30,17 @@ exports.getDiagnosticName = function (req, res) {
             }
         })
     })
-    name.then((name) =>{
+    name.then((name) => {
         let data = {
             name: name
         }
         res.send(data)
     })
-    
+
 }
 
 exports.getDiagnosticDescription = function (req, res) {
-    let query = {'idgen': req.body.idgen}
+    let query = { 'idgen': req.body.idgen }
     let name = new Promise((resolve, reject) => {
         Diagnostic.findOne(query, function (err, diagnostic) {
             if (err) return res.send(500, { error: err })
@@ -51,13 +51,13 @@ exports.getDiagnosticDescription = function (req, res) {
             }
         })
     })
-    name.then((description) =>{
+    name.then((description) => {
         let data = {
             description: description
         }
         res.send(data)
     })
-    
+
 }
 
 
@@ -76,7 +76,10 @@ exports.setDiagnosticDescription = function (req, res) {
 
 exports.setDiagnosticVariable = function (req, res) {
     //primeste ceva de forma
-    // variable: " ",
+    // variable = {
+    //  name: ,
+    //  req: 
+    //},
     //idgen: " "
     let query = { 'idgen': req.body.idgen }
     let newVariable = req.body.variable
@@ -256,7 +259,6 @@ exports.getStringNodeRules = function (req, res) {
             }
 
             let description = []
-            console.log(rule)
             if (rule !== null && !isEmptyObject(rule)) {
                 for (i = 0; i < rule.length; i++) {
                     description.push(rule[i].description)
@@ -418,223 +420,6 @@ exports.setNodeType = function (req, res) {
     })
 }
 
-//primeste idgen
-//primeste idnode
-//returneaza nodeType
-exports.getNodeType = function (req, res) {
-    let query = { "idgen": req.body.idgen }
-    console.log(req.body)
-    let findEntry = new Promise((resolve, reject) => {
-        Diagnostic.findOne(query, function (err, diagnostic) {
-            if (err) return res.send(500, { error: err })
-            if (diagnostic === null) {
-                resolve([])
-            } else {
-                resolve(diagnostic.rules)
-            }
-        })
-    })
-
-    findEntry.then((list) => {
-        listRules = list
-        //Dacă nu există diagramă creată pentru idgen
-        //Sau dacă Rules nu are niciun element
-        if (list === null || isEmptyObject(list) || list === "undefined") {
-            let data = {
-                nodeType: "mid"
-            }
-            console.log("1")
-            res.send(data)
-        } else {
-            //Dacă rules are elemente
-            console.log("LIST RULES")
-            console.log(listRules)
-            let nodeType
-            for (let i = 0; i < listRules.length; i++) {
-                if (listRules[i].idnode === req.body.idnode) {
-                    nodeType = listRules[i].nodeType
-                }
-            }
-            if (nodeType !== undefined) {
-                console.log(nodeType)
-                let data = {
-                    nodeType: nodeType
-                }
-                res.send(data)
-            } else {
-                let data = {
-                    nodeType: "mid"
-                }
-                res.send(data)
-            }
-        }
-    })
-
-}
-
-//     })
-// }
-
-// exports.getRuleErrorForNode = function (req, res) {
-//     //primeste
-//     //"idgen":
-//     //"idnode":
-//     let query = { 'idgen': req.body.idgen }
-//     let findEntry = new Promise((resolve, reject) => {
-//         Diagnostic.findOne(query, function (err, diagnostic) {
-//             if (err) return res.send(500, { error: err })
-//             if (diagnostic === null) {
-//                 resolve(null)
-//             } else {
-//                 resolve(diagnostic.rules)
-//             }
-//         })
-//     })
-
-//     findEntry.then((list) => {
-//         listRules = list
-//         //Dacă nu există diagramă creată pentru idgen
-//         //Sau dacă Rules nu are niciun element
-//         if (list === null || isEmptyObject(list)) {
-//             res.send(null)
-//         } else {
-//             //Dacă rules are elemente
-//             let data
-//             for (let i = 0; i < listRules.length; i++) {
-//                 if (listRules[i].idnode === req.body.idnode) {
-//                     data = listRules[i].error
-//                 }
-//             }
-//             if (data !== undefined) {
-//                 res.send(data)
-//             } else {
-//                 res.send("not defined")
-//             }
-
-//         }
-//     })
-// }
-
-// exports.setRuleSolution = function (req, res) {
-//     //primeste ceva de forma
-//     // solution: true/false,
-//     //idgen: " ",
-//     //idnod:
-//     let query = { 'idgen': req.body.idgen }
-//     let newSolution = req.body.solution
-//     let findEntry = new Promise((resolve, reject) => {
-//         Diagnostic.findOne(query, function (err, diagnostic) {
-//             if (err) return res.send(500, { error: err })
-//             if (diagnostic === null) {
-//                 resolve(null)
-//             } else {
-//                 resolve(diagnostic.rules)
-//             }
-//         })
-//     })
-
-//     let listRules
-//     findEntry.then((list) => {
-//         listRules = list
-//         //Dacă nu există diagramă creată pentru idgen o creăm acum
-//         if (list === null) {
-//             Diagnostic.create({
-//                 "idgen": req.body.idgen,
-//                 "rules": [{
-//                     "error": req.body.solution,
-//                     "idnode": req.body.idnode
-//                 }]
-//             }, function (err) {
-//                 if (err) return res.send(500, { error: err })
-//                 res.send('Succesfully saved new operator in rules.')
-//             });
-//         } else {
-//             //Dacă Rules nu are niciun element
-//             if (isEmptyObject(list)) {
-//                 listRules = []
-//                 listRules.push({
-//                     "idnode": req.body.idnode,
-//                     "error": req.body.solution,
-//                 })
-//             }
-//             else {
-//                 //Dacă rules are mai multe elemente
-//                 let i = 0
-//                 let index = 0
-//                 let exist = false
-//                 //verificam daca exista in bd nodul din request
-//                 while (i < listRules.length) {
-//                     if (req.body.idnode === listRules[i].idnode) {
-//                         exist = true
-//                         index = i
-//                     }
-//                     i++
-//                 }
-//                 //Daca exista un nod cu acelasi id il editam
-//                 if (exist) {
-//                     listRules[index].solution = newSolution
-//                 } else {
-//                     //Daca nu exista un nod cu acelasi id, il adaugam la finalul listei
-//                     listRules.push({
-//                         "idnode": req.body.idnode,
-//                         "error": req.body.solution
-//                     })
-//                 }
-
-//             }
-//             Diagnostic.findOneAndUpdate(query, { rules: listRules }, { upsert: true }, function (err) {
-//                 if (err) return res.send(500, { error: err })
-//                 return res.send('Succesfully saved new parameter in rules.')
-//             })
-//         }
-
-//     })
-// }
-
-// exports.getRuleSolutionForNode = function (req, res) {
-//     //primeste
-//     //"idgen":
-//     //"idnode":
-//     let query = { 'idgen': req.body.idgen }
-//     let findEntry = new Promise((resolve, reject) => {
-//         Diagnostic.findOne(query, function (err, diagnostic) {
-//             if (err) return res.send(500, { error: err })
-//             if (diagnostic === null) {
-//                 resolve(null)
-//             } else {
-//                 resolve(diagnostic.rules)
-//             }
-//         })
-//     })
-
-//     findEntry.then((list) => {
-//         listRules = list
-//         //Dacă nu există diagramă creată pentru idgen
-//         //Sau dacă Rules nu are niciun element
-//         if (list === null || isEmptyObject(list)) {
-//             res.send(null)
-//         } else {
-//             //Dacă rules are elemente
-//             let data
-//             for (let i = 0; i < listRules.length; i++) {
-//                 if (listRules[i].idnode === req.body.idnode) {
-//                     data = listRules[i].solution
-//                 }
-//             }
-//             if (data !== undefined) {
-//                 res.send(data)
-//             } else {
-//                 res.send("not defined")
-//             }
-
-//         }
-//     })
-// }
-
-
-
-
-
 //Returnam modelul GoJS al diagramei
 exports.getDiagramModel = function (req, res) {
     let query = { 'idgen': req.body.idgen }
@@ -681,7 +466,9 @@ exports.getVariableList = function (req, res) {
     })
 }
 
-///Compute diagram////////////////////////////////////////////////////////////////////////////////////
+//###################################################################################################
+//##################COMPUTE DIAGRAM #################################################################
+//
 //primeste idgen și valoarea parametriilor
 //ex:
 //data = {
@@ -693,171 +480,6 @@ exports.getVariableList = function (req, res) {
 //nodeDataArray pas 1 colorat
 //nodeDataArray pas 2 colorat
 //.....
-
-function initializeMidNodes(rules) {
-    for (i = 0; i < rules.length; i++) {
-        let error = rules[i].error
-        let solution = rules[i].solution
-        console.log("nodurile eroare si solutie")
-        console.log(error)
-        console.log(solution)
-        if ((error === false || typeof error === "undefined") &&
-            (solution === false || typeof solution === "undefined")) {
-            rules[i].intermediate = true
-        }
-    }
-    return rules;
-}
-
-function getRuleNode(rules, idnode) {
-    for (i = 0; i < rules.length; i++) {
-        if (rules[i].idnode == idnode)
-            return rules[i]
-    }
-    return "final"
-}
-
-//returneaza id-ul nodului care are ramura true/false si 
-//care il are ca tata nodul trimis ca parametru
-function findChild(parent, link, linkDataArray) {
-    for (i = 0; i <= linkDataArray.length; i++) {
-        if (linkDataArray[i].from === parent && linkDataArray[i].text == link) {
-            child = linkDataArray[i].to
-            return child
-        }
-    }
-    return "final"
-}
-
-
-//returneaza matricea descrisa mai sus
-//primeste nodeDataArray si traseul
-//JS face o copie prin referinta, dar noi
-//avem nevoie de o clona deci folosim
-//stringify si parse pentru deep copy
-function animationMatrix(nodeDataArray, path) {
-    let matrix = []
-    let listCopy = JSON.parse(JSON.stringify(nodeDataArray))
-    matrix.push(JSON.parse(JSON.stringify(listCopy)))
-
-    for (i = 0; i < path.length; i++) {
-        let index = listCopy.findIndex((node) => { return node.key === path[i] })
-        listCopy[index].color = '#78e1ff'
-        matrix.push(JSON.parse(JSON.stringify(listCopy)))
-    }
-
-    console.log(matrix)
-    return matrix
-}
-
-
-exports.compute = function (req, res) {
-    let query = { 'idgen': req.body.idgen }
-    let inputs = req.body.inputs
-    let findEntry = new Promise((resolve, reject) => {
-        Diagnostic.findOne(query, function (err, diagnostic) {
-            if (err) return res.send(500, { error: err })
-            if (diagnostic === null) {
-                resolve(null)
-            } else {
-                resolve(diagnostic)
-            }
-        })
-    })
-
-    findEntry.then((diagram) => {
-        let rules = diagram.rules
-        let nodeDataArray = diagram.diagram[0].nodeDataArray
-        let linkDataArray = diagram.diagram[0].linkDataArray
-
-        //In prezent, in baza de date avem marcate doar nodurile eroare/solutie (deci aceste noduri
-        //le avem in rules)
-        //Construim o functie care returneaza o lista ce contine si nodurile intermediare
-        rules = initializeMidNodes(rules);
-
-        //Nodul de start va fi nodul care nu are parinte. In cazul nostru, primul nod din nodeDataArray va fi
-        //radacina. ++ ulterior pot crea o functie care gaseste nodul fara parinte, daca e cazul
-        //curentNode retine id-ul nodului curent
-        let currentNode = nodeDataArray[0].key
-
-        //construim o functie care ne returneaza regulile aferente nodului
-        let currentNodeRule = getRuleNode(rules, currentNode)
-        console.log(currentNodeRule)
-        let path = []
-        path.push(currentNode)
-        //cat timp suntem intr-un nod intermediar
-        while (currentNodeRule.error !== true && currentNodeRule.solution !== true && currentNode !== "final"
-            && currentNodeRule !== "final") {
-            console.log("error")
-            console.log(currentNodeRule.error)
-            console.log("solution")
-            console.log(currentNodeRule.solution)
-            let operator = currentNodeRule.operator
-            let param = parseFloat(currentNodeRule.parameter)
-            let variable = currentNodeRule.variable
-            let input = parseFloat(inputs[variable])
-            let expression
-            //calculam regula nodului utilizand input-ul de la user
-            switch (operator) {
-                case '10':
-                    expression = (input > param)
-                    console.log("case10")
-                    break;
-                case '20':
-                    expression = (input <= param)
-                    console.log("case20")
-                    break;
-                case '30':
-                    expression = (input === param)
-                    console.log("case30")
-                    break;
-            }
-            console.log("expresie")
-            console.log(expression)
-            let child = findChild(currentNode, expression, linkDataArray)
-            console.log("child")
-            console.log(child)
-            path.push(child)
-            currentNode = child
-            console.log("trace")
-            console.log(path)
-            currentNodeRule = getRuleNode(rules, currentNode)
-            console.log(currentNodeRule)
-        }
-
-        //functie care ne construieste matricea descrisa mai sus
-        let matrix = animationMatrix(nodeDataArray, path)
-        res.send(matrix)
-    })
-}
-
-
-//#####################################################################################################
-//##################COMPUTE DIAGRAM V2#################################################################
-///Compute diagram////////////////////////////////////////////////////////////////////////////////////
-//primeste idgen și valoarea parametriilor
-//ex:
-//data = {
-//     "idgen": "SKSFNSDJKNJ",
-//     "inputs": []
-// }
-//returneaza un o matrice cu culorile nodurilor modificate in functie de traseul calculat,
-//pentru a realiza animatia
-//nodeDataArray pas 1 colorat
-//nodeDataArray pas 2 colorat
-//.....
-
-function initializeMidNodes2(rules) {
-    for (i = 0; i < rules.length; i++) {
-        let type = rules[i].nodeType
-        console.log("nodurile eroare si solutie")
-        console.log(type)
-        if (type !== "solution" || type !== "error") {
-            rules[i].nodeType = "mid"
-        }
-    }
-    return rules;
-}
 
 function getRuleNode2(rules, idnode) {
     for (i = 0; i < rules.length; i++) {
@@ -868,7 +490,7 @@ function getRuleNode2(rules, idnode) {
 }
 
 //returneaza id-ul nodului care are ramura true/false si 
-//care il are ca tata nodul trimis ca parametru
+//care il are ca tata pe nodul trimis ca parametru
 function findChild2(parent, link, linkDataArray) {
     for (i = 0; i < linkDataArray.length; i++) {
         if (linkDataArray[i].from === parent && linkDataArray[i].text == link) {
@@ -896,36 +518,34 @@ function animationMatrix2(nodeDataArray, path) {
         matrix.push(JSON.parse(JSON.stringify(listCopy)))
     }
 
-    console.log(matrix)
     return matrix
 }
 
-function computeRule(currentNodeRule, inputs){
-            let operator = currentNodeRule.operator
-            let param = parseFloat(currentNodeRule.parameter)
-            let variable = currentNodeRule.variable
-            let input = parseFloat(inputs[variable])
-            let expression
+function computeRule(currentNodeRule, inputs, variablesProperties) {
+    let operator = currentNodeRule.operator
+    let param = parseFloat(currentNodeRule.parameter)
+    let variable = currentNodeRule.variable
+    let required = variablesProperties[variable].req
+    let expression
 
-            //if (input === "undefined" || input === " " ..etc)&& required === false
-            //return true
+    if ((typeof inputs[variable] === "undefined" || inputs[variable] === "") && required === false) {
+        return true
+    }
 
-            //calculam regula nodului utilizand input-ul de la user
-            switch (operator) {
-                case '10':
-                    expression = (input > param)
-                    console.log("case10")
-                    break;
-                case '20':
-                    expression = (input <= param)
-                    console.log("case20")
-                    break;
-                case '30':
-                    expression = (input === param)
-                    console.log("case30")
-                    break;
-            }
-            return expression
+    //calculam regula nodului utilizand input-ul de la user
+    let input = parseFloat(inputs[variable])
+    switch (operator) {
+        case '10':
+            expression = (input > param)
+            break;
+        case '20':
+            expression = (input <= param)
+            break;
+        case '30':
+            expression = (input === param)
+            break;
+    }
+    return expression
 }
 
 
@@ -947,45 +567,36 @@ exports.compute2 = function (req, res) {
         let rules = diagram.rules
         let nodeDataArray = diagram.diagram[0].nodeDataArray
         let linkDataArray = diagram.diagram[0].linkDataArray
+        let variablesProperties = diagram.variables
 
         //Nodul de start va fi nodul care nu are parinte. In cazul nostru, primul nod din nodeDataArray va fi
-        //radacina. ++ ulterior pot crea o functie care gaseste nodul fara parinte, daca e cazul
-        //curentNode retine id-ul nodului curent
+        //radacina.
         let currentNode = nodeDataArray[0].key
 
         //construim o functie care ne returneaza regulile aferente nodului
         let currentNodeRule = getRuleNode2(rules, currentNode)
-        
+
         let path = []
         path.push(currentNode)
 
         //cat timp suntem intr-un nod intermediar
-        while (currentNode!== "not found" && currentNodeRule!=="not found") {
-
-            console.log("Current Node Rule:")
-            console.log(currentNodeRule)
-            console.log("Current Node")
-            console.log(currentNode)
+        while (currentNode !== "not found" && currentNodeRule !== "not found") {
 
             let expression = true
-            for(let i = 0; i<currentNodeRule.rule.length; i++){
-                let result = computeRule(currentNodeRule.rule[i],inputs)
+            for (let i = 0; i < currentNodeRule.rule.length; i++) {
+                let result = computeRule(currentNodeRule.rule[i], inputs, variablesProperties)
                 expression = expression && result
             }
 
             let child = findChild2(currentNode, expression, linkDataArray)
-            console.log("Child")
-            console.log(child)
-        
-            if(child !== "not found"){
+
+            if (child !== "not found") {
                 path.push(child)
             }
 
             currentNode = child
             currentNodeRule = getRuleNode2(rules, currentNode)
         }
-        console.log("trace")
-        console.log(path)
 
         //functie care ne construieste matricea descrisa mai sus
         let matrix = animationMatrix2(nodeDataArray, path)

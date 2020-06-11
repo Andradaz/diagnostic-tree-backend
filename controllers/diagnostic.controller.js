@@ -603,3 +603,257 @@ exports.compute2 = function (req, res) {
         res.send(matrix)
     })
 }
+
+//primim outputul din weka il parsam
+//intr-un JSON pe care il intelege GoJS
+//primeste wekaOutput
+//compute weka file
+function wekaToJson(wekaOutput) {
+    let lines = []
+    let at_tree = false
+    let line_skip = 0
+
+    const splitWekaOutput = wekaOutput.split('\r\n')
+    console.log(splitWekaOutput)
+
+    for (i = 0; i < splitWekaOutput.length; i++) {
+        let line_raw = splitWekaOutput[i]
+        let line
+        if (line_skip > 0) {
+            line_skip = line_skip - 1
+        } else {
+            line = line_raw.trimEnd()
+
+            if (!at_tree) {
+                if (line === "J48 pruned tree") {
+                    at_tree = true
+                    line_skip = 2
+                }
+            } else {
+                if (line === "") {
+                    break;
+                }
+                lines.push(line)
+            }
+        }
+    }
+
+
+    let currentKey = 0
+    let trace = []
+    let nodeDataArray = []
+    let linkDataArray = []
+    let rules = []
+
+    for (let i = 0; i < lines.length; i++) {
+        let level = lines[i].split("|").length - 1
+        console.log("\n ### \nIteratia " + i)
+        console.log("level " + level)
+        console.log("linia: " + lines[i].slice(level * 4))
+        let unlevelled_line = lines[i].slice(level * 4)
+
+        //re cand linia contine si solutia ([\w\-]+) ([\<\=\>\!]+) ([0-9a-zA-Z\.\-_]+): ([\S]+) \(([\S]+)\)
+        //re cand linia contine doar regula ([\w\-]+) ([\<\=\>\!]+) ([0-9a-zA-Z\.\-_]+)
+        //verificam daca este o linie solutie
+
+        let re_sol = /([\w\-]+) ([\<\=\>\!]+) ([0-9a-zA-Z\.\-_]+): ([\S]+) \(([\S]+)\)/
+        let re = /([\w\-]+) ([\<\=\>\!]+) ([0-9a-zA-Z\.\-_]+)/
+
+        //obtinem variabila, operatorul si parametrul
+        let sol = false
+        let variable = ""
+        let operator = ""
+        let parameter = ""
+        let result = ""
+        let indexOfOperator
+        let indexOfParameter
+        let indexOfResult
+
+
+        if (unlevelled_line.includes("<=")) {
+            operator = "<="
+            indexOfOperator = unlevelled_line.indexOf("<=")
+            indexOfParameter = indexOfOperator + 3
+        } else {
+            operator = ">"
+            indexOfOperator = unlevelled_line.indexOf(">")
+            indexOfParameter = indexOfOperator + 2
+        }
+
+        variable = unlevelled_line.slice(0, indexOfOperator)
+        variable = variable.trimEnd()
+
+        if (re_sol.test(unlevelled_line)) {
+            sol = true
+            indexOfResult = unlevelled_line.indexOf(":")
+            parameter = unlevelled_line.slice(indexOfParameter, indexOfResult)
+            result = unlevelled_line.slice(indexOfResult + 2)
+
+        } else {
+            sol = false
+            parameter = unlevelled_line.slice(indexOfParameter)
+        }
+
+        console.log("variable: " + variable)
+        console.log("operator: " + operator)
+        console.log("parameter: " + parameter)
+        console.log("key" + currentKey)
+        if (sol) {
+            console.log("result: " + result)
+        }
+
+        //trace
+        let node = {
+            "key": currentKey,
+            "level": level,
+            "operator": operator
+        }
+        trace.push(node)
+
+        let name = variable + operator + parameter
+        //nodeDataArray
+        if (operator === "<=") {
+            let nodeDescription = {
+                "key": currentKey,
+                "color": "#c0cacf",
+                "name": name
+            }
+            nodeDataArray.push(nodeDescription)
+        }
+
+        /////daca are si nodul solutie, il adaugam si modificam cheia
+        if (sol) {
+            let nodeDescription = {
+                "key": currentKey + 1,
+                "color": "#c0cacf",
+                "name": result
+            }
+            nodeDataArray.push(nodeDescription)
+        }
+
+        //rules
+        if (operator === "<=") {
+            let rule =
+            {
+                "idnode": currentKey,
+                "rule": [{
+                    "variable": variable,
+                    "operator": operator,
+                    "parameter": parameter,
+                    "description": name
+                }]
+            }
+            rules.push(rule)
+        }
+
+
+
+        //linkDataArray
+        //daca nu e radacina
+        if (level - 1 !== -1) {
+            let from = 0
+            let link
+            let text = "false"
+
+            if (operator === ">" && sol) {
+                for (let j = trace.length - 1; j >= 0; j--) {
+                    if (trace[j].level === level) {
+                        from = trace[j].key
+                        break;
+                    }
+                }
+                link = {
+                    "from": from,
+                    "to": currentKey + 1,
+                    "text": "false"
+                }
+                linkDataArray.push(link)
+                currentKey = currentKey + 1
+            } else if (operator === "<=" && sol) {
+                for (let j = trace.length - 1; j >= 0; j--) {
+                    if (trace[j].level === level - 1 && trace[j].operator === "<=") {
+                        from = trace[j].key
+                        break;
+                    }
+                }
+                for (let j = trace.length - 1; j >= 0; j--) {
+                    if (trace[j].level === level - 1) {
+                        if (trace[j].operator === "<=") {
+                            text = "true"
+                        } else {
+                            text = "false"
+                        }
+                        break;
+                    }
+                }
+                link = {
+                    "from": from,
+                    "to": currentKey,
+                    "text": text
+                }
+                linkDataArray.push(link)
+                link = {
+                    "from": currentKey,
+                    "to": currentKey + 1,
+                    "text": "true"
+                }
+                linkDataArray.push(link)
+                currentKey = currentKey + 1
+            } else if (operator === "<=") {
+                for (let j = trace.length - 1; j >= 0; j--) {
+                    if (trace[j].level === level - 1 && trace[j].operator === "<=") {
+                        from = trace[j].key
+                        break;
+                    }
+                }
+                for (let j = trace.length - 1; j >= 0; j--) {
+                    if (trace[j].level === level - 1) {
+                        if (trace[j].operator === "<=") {
+                            text = "true"
+                        } else {
+                            text = "false"
+                        }
+                        break;
+                    }
+                }
+                link = {
+                    "from": from,
+                    "to": currentKey,
+                    "text": text
+                }
+                linkDataArray.push(link)
+            }
+
+        }
+
+
+        currentKey = currentKey + 1
+    }
+
+    console.log(trace)
+    console.log("nodeDataArray")
+    console.log(nodeDataArray)
+    console.log("rules")
+    console.log(rules)
+    console.log("linkDataArray")
+    console.log(linkDataArray)
+
+    let diagram = {
+        "diagram": {
+            "class": "GraphLinksModel",
+            "nodeDataArray": nodeDataArray,
+            "linkDataArray": linkDataArray,
+        },
+        "rules": rules
+    }
+
+    return diagram
+
+}
+
+exports.computeWekaOutput = function (req, res) {
+    console.log(req.body.wekaOutput)
+    let wekaOutput = req.body.wekaOutput
+    let diagram = wekaToJson(wekaOutput)
+    res.send(diagram)
+}

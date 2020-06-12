@@ -422,6 +422,8 @@ exports.setNodeType = function (req, res) {
 
 //Returnam modelul GoJS al diagramei
 exports.getDiagramModel = function (req, res) {
+    console.log("IDGEN IN DIAGRAM MODEL")
+    console.log(req.body.idgen)
     let query = { 'idgen': req.body.idgen }
     let inputs = req.body.inputs
     let findEntry = new Promise((resolve, reject) => {
@@ -608,6 +610,9 @@ exports.compute2 = function (req, res) {
 //intr-un JSON pe care il intelege GoJS
 //primeste wekaOutput
 //compute weka file
+//prima parte a codului este o adaptare a
+//algoritmului
+
 function wekaToJson(wekaOutput) {
     let lines = []
     let at_tree = false
@@ -619,11 +624,11 @@ function wekaToJson(wekaOutput) {
     for (i = 0; i < splitWekaOutput.length; i++) {
         let line_raw = splitWekaOutput[i]
         let line
+
         if (line_skip > 0) {
             line_skip = line_skip - 1
         } else {
             line = line_raw.trimEnd()
-
             if (!at_tree) {
                 if (line === "J48 pruned tree") {
                     at_tree = true
@@ -710,7 +715,7 @@ function wekaToJson(wekaOutput) {
         }
         trace.push(node)
 
-        let name = variable + operator + parameter
+        let name = variable + " " + operator+ " " + parameter
         //nodeDataArray
         if (operator === "<=") {
             let nodeDescription = {
@@ -756,7 +761,7 @@ function wekaToJson(wekaOutput) {
             let text = "false"
 
             if (operator === ">" && sol) {
-                for (let j = trace.length - 1; j >= 0; j--) {
+                for (let j = trace.length - 2; j >= 0; j--) {
                     if (trace[j].level === level) {
                         from = trace[j].key
                         break;
@@ -853,7 +858,22 @@ function wekaToJson(wekaOutput) {
 
 exports.computeWekaOutput = function (req, res) {
     console.log(req.body.wekaOutput)
+    console.log(req.body.idgen)
     let wekaOutput = req.body.wekaOutput
     let diagram = wekaToJson(wekaOutput)
-    res.send(diagram)
+
+    let query = { 'idgen': req.body.idgen }
+    let newDiagram = diagram.diagram
+    let newRules = diagram.rules
+    // newDiagram = JSON.parse(newDiagram)
+    Diagnostic.findOneAndUpdate(query, { diagram: newDiagram, rules: newRules,published: false }, { upsert: true }, function (err) {
+        if (err) {
+            console.log(err)
+            return res.send(500, { error: err })
+        }
+        let data = {
+            response: 'Succesfully imported diagram in diagnostic.'
+        }
+        return res.send(data)
+    });
 }

@@ -524,9 +524,11 @@ function animationMatrix2(nodeDataArray, path) {
 }
 
 function computeRule(currentNodeRule, inputs, variablesProperties) {
+    console.log(variablesProperties)
     let operator = currentNodeRule.operator
     let param = parseFloat(currentNodeRule.parameter)
     let variable = currentNodeRule.variable
+    console.log("variable" + variable)
     let required = variablesProperties[variable].req
     let expression
 
@@ -621,9 +623,27 @@ function wekaToJson(wekaOutput) {
     const splitWekaOutput = wekaOutput.split('\r\n')
     console.log(splitWekaOutput)
 
+    let nrAttributes
+    let arrayAttributes = []
     for (i = 0; i < splitWekaOutput.length; i++) {
         let line_raw = splitWekaOutput[i]
         let line
+        let newAttribute
+
+        if(nrAttributes > 0){
+            newAttribute = line_raw.trim()
+            let attObj = {
+                "name" : newAttribute,
+                "req" : true
+            }
+            nrAttributes = nrAttributes - 1
+            arrayAttributes.push(attObj)
+
+        }
+        if(line_raw.includes("Attributes:")){
+            nrAttributes = line_raw.substr(14)
+            nrAttributes = parseInt(nrAttributes.trimEnd(),10) - 1
+        }
 
         if (line_skip > 0) {
             line_skip = line_skip - 1
@@ -643,6 +663,8 @@ function wekaToJson(wekaOutput) {
         }
     }
 
+    console.log("ArrayAttributes ")
+    console.log(arrayAttributes)
 
     let currentKey = 0
     let trace = []
@@ -738,12 +760,13 @@ function wekaToJson(wekaOutput) {
 
         //rules
         if (operator === "<=") {
+            let variableNr = arrayAttributes.map((obj)=> {return obj.name}).indexOf(variable);
             let rule =
             {
                 "idnode": currentKey,
                 "rule": [{
-                    "variable": variable,
-                    "operator": operator,
+                    "variable": variableNr,
+                    "operator": 20,
                     "parameter": parameter,
                     "description": name
                 }]
@@ -849,7 +872,8 @@ function wekaToJson(wekaOutput) {
             "nodeDataArray": nodeDataArray,
             "linkDataArray": linkDataArray,
         },
-        "rules": rules
+        "rules": rules,
+        "variables": arrayAttributes
     }
 
     return diagram
@@ -865,8 +889,9 @@ exports.computeWekaOutput = function (req, res) {
     let query = { 'idgen': req.body.idgen }
     let newDiagram = diagram.diagram
     let newRules = diagram.rules
+    let variables = diagram.variables
     // newDiagram = JSON.parse(newDiagram)
-    Diagnostic.findOneAndUpdate(query, { diagram: newDiagram, rules: newRules,published: false }, { upsert: true }, function (err) {
+    Diagnostic.findOneAndUpdate(query, { diagram: newDiagram, rules: newRules,published: false, variables: variables }, { upsert: true }, function (err) {
         if (err) {
             console.log(err)
             return res.send(500, { error: err })

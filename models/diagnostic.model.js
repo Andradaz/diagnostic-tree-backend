@@ -30,7 +30,8 @@ let DiagnosticSchema  = new Schema({
         linkDataArray: [{
             from: String,
             to: String,
-            text: Boolean
+            text: Boolean,
+            linkColor: String
         }]
     }
     ]

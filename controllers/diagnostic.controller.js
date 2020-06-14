@@ -509,18 +509,34 @@ function findChild2(parent, link, linkDataArray) {
 //JS face o copie prin referinta, dar noi
 //avem nevoie de o clona deci folosim
 //stringify si parse pentru deep copy
-function animationMatrix2(nodeDataArray, path) {
+function animationMatrix2(nodeDataArray, linkDataArray, path) {
     let matrix = []
+    let linkMatrix = []
     let listCopy = JSON.parse(JSON.stringify(nodeDataArray))
+    let linkListCopy = JSON.parse(JSON.stringify(linkDataArray))
     matrix.push(JSON.parse(JSON.stringify(listCopy)))
+    linkMatrix.push(JSON.parse(JSON.stringify(linkListCopy)))
 
     for (i = 0; i < path.length; i++) {
         let index = listCopy.findIndex((node) => { return node.key === path[i] })
         listCopy[index].color = '#78e1ff'
         matrix.push(JSON.parse(JSON.stringify(listCopy)))
+        if(i>0){
+            let indexLink = linkListCopy.findIndex(
+                (node) => {
+                    return ((node.from === path[i-1]) && (node.to === path[i]))
+                })
+            linkListCopy[indexLink].linkColor = '#78e1ff'
+            linkMatrix.push(JSON.parse(JSON.stringify(linkListCopy)))
+        }
     }
+    console.log(linkMatrix)
 
-    return matrix
+    let animation = {
+        "matrix": matrix,
+        "linkMatrix": linkMatrix
+    }
+    return animation
 }
 
 function computeRule(currentNodeRule, inputs, variablesProperties) {
@@ -603,8 +619,8 @@ exports.compute2 = function (req, res) {
         }
 
         //functie care ne construieste matricea descrisa mai sus
-        let matrix = animationMatrix2(nodeDataArray, path)
-        res.send(matrix)
+        let animation = animationMatrix2(nodeDataArray, linkDataArray, path)
+        res.send(animation)
     })
 }
 

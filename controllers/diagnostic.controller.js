@@ -519,14 +519,14 @@ function animationMatrix2(nodeDataArray, linkDataArray, path) {
 
     for (i = 0; i < path.length; i++) {
         let index = listCopy.findIndex((node) => { return node.key === path[i] })
-        listCopy[index].color = '#78e1ff'
+        listCopy[index].color = '#a8ecff'
         matrix.push(JSON.parse(JSON.stringify(listCopy)))
         if(i>0){
             let indexLink = linkListCopy.findIndex(
                 (node) => {
                     return ((node.from === path[i-1]) && (node.to === path[i]))
                 })
-            linkListCopy[indexLink].linkColor = '#78e1ff'
+            linkListCopy[indexLink].linkColor = '#a8ecff'
             linkMatrix.push(JSON.parse(JSON.stringify(linkListCopy)))
         }
     }

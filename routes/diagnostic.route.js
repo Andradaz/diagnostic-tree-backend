@@ -19,4 +19,5 @@ router.post('/setDescription', diagnostic_controller.setDiagnosticDescription)
 router.post('/getName', diagnostic_controller.getDiagnosticName)
 router.post('/getDescription', diagnostic_controller.getDiagnosticDescription)
 router.post('/computeWekaOutput', diagnostic_controller.computeWekaOutput)
+router.post('/removeDiagnostic', diagnostic_controller.removeDiagnostic)
 module.exports = router

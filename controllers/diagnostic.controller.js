@@ -902,3 +902,19 @@ exports.computeWekaOutput = function (req, res) {
         return res.send(data)
     });
 }
+
+//primeste id-ul diagramei
+//sterge din bd documentul si toate detaliile lui
+exports.removeDiagnostic = function (req,res){
+    let query = {'idgen': req.body.idgen}
+    Diagnostic.findOneAndRemove(query, function(err){
+        if(err){
+            console.log(err)
+            return res.send(500, { error: err })
+        }
+        let data = {
+                response: 'Succesfully removed diagram in diagnostic.'
+        }
+        return res.send(data)
+    })
+}

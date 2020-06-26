@@ -422,8 +422,6 @@ exports.setNodeType = function (req, res) {
 
 //Returnam modelul GoJS al diagramei
 exports.getDiagramModel = function (req, res) {
-    console.log("IDGEN IN DIAGRAM MODEL")
-    console.log(req.body.idgen)
     let query = { 'idgen': req.body.idgen }
     let inputs = req.body.inputs
     let findEntry = new Promise((resolve, reject) => {
@@ -530,7 +528,6 @@ function animationMatrix2(nodeDataArray, linkDataArray, path) {
             linkMatrix.push(JSON.parse(JSON.stringify(linkListCopy)))
         }
     }
-    console.log(linkMatrix)
 
     let animation = {
         "matrix": matrix,
@@ -540,11 +537,9 @@ function animationMatrix2(nodeDataArray, linkDataArray, path) {
 }
 
 function computeRule(currentNodeRule, inputs, variablesProperties) {
-    console.log(variablesProperties)
     let operator = currentNodeRule.operator
     let param = parseFloat(currentNodeRule.parameter)
     let variable = currentNodeRule.variable
-    console.log("variable" + variable)
     let required = variablesProperties[variable].req
     let expression
 
@@ -636,8 +631,7 @@ function wekaToJson(wekaOutput) {
     let at_tree = false
     let line_skip = 0
 
-    const splitWekaOutput = wekaOutput.split('\r\n')
-    console.log(splitWekaOutput)
+    const splitWekaOutput = wekaOutput.split('\n')
 
     let nrAttributes
     let arrayAttributes = []
@@ -679,9 +673,6 @@ function wekaToJson(wekaOutput) {
         }
     }
 
-    console.log("ArrayAttributes ")
-    console.log(arrayAttributes)
-
     let currentKey = 0
     let trace = []
     let nodeDataArray = []
@@ -690,9 +681,6 @@ function wekaToJson(wekaOutput) {
 
     for (let i = 0; i < lines.length; i++) {
         let level = lines[i].split("|").length - 1
-        console.log("\n ### \nIteratia " + i)
-        console.log("level " + level)
-        console.log("linia: " + lines[i].slice(level * 4))
         let unlevelled_line = lines[i].slice(level * 4)
 
         //re cand linia contine si solutia ([\w\-]+) ([\<\=\>\!]+) ([0-9a-zA-Z\.\-_]+): ([\S]+) \(([\S]+)\)
@@ -737,14 +725,6 @@ function wekaToJson(wekaOutput) {
             parameter = unlevelled_line.slice(indexOfParameter)
         }
 
-        console.log("variable: " + variable)
-        console.log("operator: " + operator)
-        console.log("parameter: " + parameter)
-        console.log("key" + currentKey)
-        if (sol) {
-            console.log("result: " + result)
-        }
-
         //trace
         let node = {
             "key": currentKey,
@@ -758,7 +738,7 @@ function wekaToJson(wekaOutput) {
         if (operator === "<=") {
             let nodeDescription = {
                 "key": currentKey,
-                "color": "#c0cacf",
+                "color": "#d3dfe6",
                 "name": name
             }
             nodeDataArray.push(nodeDescription)
@@ -768,7 +748,7 @@ function wekaToJson(wekaOutput) {
         if (sol) {
             let nodeDescription = {
                 "key": currentKey + 1,
-                "color": "#c0cacf",
+                "color": "#d3dfe6",
                 "name": result
             }
             nodeDataArray.push(nodeDescription)
@@ -874,14 +854,6 @@ function wekaToJson(wekaOutput) {
         currentKey = currentKey + 1
     }
 
-    console.log(trace)
-    console.log("nodeDataArray")
-    console.log(nodeDataArray)
-    console.log("rules")
-    console.log(rules)
-    console.log("linkDataArray")
-    console.log(linkDataArray)
-
     let diagram = {
         "diagram": {
             "class": "GraphLinksModel",
@@ -897,8 +869,6 @@ function wekaToJson(wekaOutput) {
 }
 
 exports.computeWekaOutput = function (req, res) {
-    console.log(req.body.wekaOutput)
-    console.log(req.body.idgen)
     let wekaOutput = req.body.wekaOutput
     let diagram = wekaToJson(wekaOutput)
 
@@ -906,8 +876,12 @@ exports.computeWekaOutput = function (req, res) {
     let newDiagram = diagram.diagram
     let newRules = diagram.rules
     let variables = diagram.variables
-    // newDiagram = JSON.parse(newDiagram)
-    Diagnostic.findOneAndUpdate(query, { diagram: newDiagram, rules: newRules,published: false, variables: variables }, { upsert: true }, function (err) {
+
+    Diagnostic.findOneAndUpdate(query, { diagram: newDiagram,
+                                         rules: newRules,
+                                         published: false,
+                                         variables: variables }, { upsert: true }, 
+                                         function (err) {
         if (err) {
             console.log(err)
             return res.send(500, { error: err })
